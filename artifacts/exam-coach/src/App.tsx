@@ -71,11 +71,15 @@ function Router() {
 }
 
 function useCoachData() {
-  const [lang, setLang] = useState<Lang>(() => (localStorage.getItem('coach-language') as Lang) || 'en');
+  const [lang, setLang] = useState<Lang>(() => (localStorage.getItem('coach-language-v2') as Lang) || 'ar');
   const [attempts, setAttempts] = useState<Attempt[]>(() => {
     try { return JSON.parse(localStorage.getItem('coach-attempts') || '[]') as Attempt[]; } catch { return []; }
   });
-  useEffect(() => { localStorage.setItem('coach-language', lang); }, [lang]);
+  useEffect(() => {
+    localStorage.setItem('coach-language-v2', lang);
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  }, [lang]);
   useEffect(() => { localStorage.setItem('coach-attempts', JSON.stringify(attempts)); }, [attempts]);
   return { lang, setLang, t: copy[lang], attempts, setAttempts };
 }
