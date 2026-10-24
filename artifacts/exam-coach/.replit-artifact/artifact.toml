@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Exam Coach"
+description = "A multilingual learning platform that helps students understand why they made mistakes, practice the underlying exam skill, and track whether they have learned from it. Starts with TYT and is structured to expand to SAT and more exams."
+version = "1.0.0"
+id = "artifacts/exam-coach"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19859
+
+[services.development]
+run = "pnpm --filter @workspace/exam-coach run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/exam-coach", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/exam-coach/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19859"
+BASE_PATH = "/"

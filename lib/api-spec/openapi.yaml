@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: study
+    description: Student mistake diagnosis and targeted practice
 paths:
   /healthz:
     get:
@@ -24,6 +26,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /study/diagnose:
+    post:
+      operationId: diagnoseStudyWork
+      tags: [study]
+      summary: Diagnose a student's work and generate a targeted practice question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudyDiagnosisInput"
+      responses:
+        "200":
+          description: Diagnosis and a new practice question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyDiagnosis"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyError"
+        "429":
+          description: Too many diagnosis requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyError"
+        "502":
+          description: The diagnosis service could not return a valid result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyError"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +71,115 @@ components:
           type: string
       required:
         - status
+    StudyDiagnosisInput:
+      type: object
+      properties:
+        exam:
+          type: string
+          enum: [TYT, SAT]
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 80
+        sourceLanguage:
+          type: string
+          enum: [ar, tr, en]
+        explanationLanguage:
+          type: string
+          enum: [ar, tr, en]
+        question:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        studentWork:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        selectedAnswer:
+          type: string
+          maxLength: 200
+        referenceAnswer:
+          type: string
+          minLength: 1
+          maxLength: 200
+        referenceExplanation:
+          type: string
+          minLength: 1
+          maxLength: 3000
+      required:
+        - exam
+        - subject
+        - sourceLanguage
+        - explanationLanguage
+        - question
+        - studentWork
+        - referenceAnswer
+        - referenceExplanation
+    StudyPracticeQuestion:
+      type: object
+      properties:
+        prompt:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+          minItems: 3
+          maxItems: 5
+        answerIndex:
+          type: integer
+          minimum: 0
+          maximum: 4
+        explanation:
+          type: string
+      required:
+        - prompt
+        - options
+        - answerIndex
+        - explanation
+    StudyDiagnosis:
+      type: object
+      properties:
+        errorType:
+          type: string
+          enum:
+            - concept
+            - calculation
+            - reading
+            - strategy
+            - careless
+            - no_error
+            - uncertain
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        diagnosis:
+          type: string
+          minLength: 1
+        correction:
+          type: string
+          minLength: 1
+        referenceAnswer:
+          type: string
+        referenceExplanation:
+          type: string
+          minLength: 1
+        practice:
+          $ref: "#/components/schemas/StudyPracticeQuestion"
+      required:
+        - errorType
+        - confidence
+        - diagnosis
+        - correction
+        - referenceAnswer
+        - referenceExplanation
+        - practice
+    StudyError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
 
